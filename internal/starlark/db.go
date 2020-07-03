@@ -128,18 +128,17 @@ func (ew *errWriter) SetDBRecord(s string, i interface{}, r db.Record) {
 //Wrapper for the Record interface so we can control which methods to expose.
 // This gets surfaced in Starlark as return values of database functions
 type Record interface {
-	Map() map[string]interface{}
 	ID() db.ID
 	Get(string) (interface{}, error)
+	GetString(string) (string, error)
+	GetBool(string) (bool, error)
+	GetInt(string) (int64, error)
+	GetFloat(string) (float64, error)
 	GetFK(string) (db.ID, error)
 }
 
 type starlarkRecord struct {
 	inner db.Record
-}
-
-func (r *starlarkRecord) Map() map[string]interface{} {
-	return r.inner.Map()
 }
 
 func (r *starlarkRecord) ID() db.ID {
@@ -153,6 +152,53 @@ func (r *starlarkRecord) Get(fieldName string) (interface{}, error) {
 	}
 	return field, nil
 }
+
+func (r *starlarkRecord) getType(fieldName string, t interface{}) (interface{}, error) {
+	field, err := r.inner.Get(fieldName)
+	if err != nil {
+		return "", err
+	}
+	if reflect.TypeOf(field) != reflect.TypeOf(t) {
+		return nil, fmt.Errorf("%w expected type %T, but found %T", ErrInvalidInput, t, field)
+
+	}
+	return field, nil
+}
+
+func (r *starlarkRecord) GetString(fieldName string) (string, error) {
+	field, err := r.getType(fieldName, "")
+	if err != nil {
+		return "", err
+	}
+	return field.(string), nil
+}
+
+func (r *starlarkRecord) GetBool(fieldName string) (bool, error) {
+	field, err := r.getType(fieldName, false)
+	if err != nil {
+		return false, err
+	}
+	return field.(bool), nil
+
+}
+
+func (r *starlarkRecord) GetInt(fieldName string) (int64, error) {
+	field, err := r.getType(fieldName, 0)
+	if err != nil {
+		return 0, err
+	}
+	return field.(int64), nil
+
+}
+
+func (r *starlarkRecord) GetFloat(fieldName string) (float64, error) {
+	field, err := r.getType(fieldName, 0.0)
+	if err != nil {
+		return 0.0, err
+	}
+	return field.(float64), nil
+}
+
 
 func (r *starlarkRecord) GetFK(fieldName string) (db.ID, error) {
 	rel, err := r.inner.GetFK(fieldName)
@@ -312,28 +358,36 @@ func DBLib(tx db.RWTx) map[string]interface{} {
 		}
 		return rec, err
 	}
-	env["Exec"] = func(r interface{}, args interface{}) (interface{}, error) {
+	env["Exec"] = func(r interface{}, args interface{}) interface{} {
 		ew := errWriter{}
 		rec := ew.assertStarlarkRecord(r)
 		ci := ew.GetFromRecord("code", rec)
 		code := ew.assertString(ci)
 		runtime, err := db.RecordToEnumValue(rec.inner, "runtime", tx)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		fs, err := db.RecordToEnumValue(rec.inner, "functionSignature", tx)
 		if err != nil {
-			return nil, ew.err
+			return ew.err
 		}
 		switch runtime.ID {
 		case db.Starlark.ID:
 			fh := &StarlarkFunctionHandle{Code: code, FunctionSignature: db.FunctionSignatureEnumValue{fs}}
-			return fh.Invoke(args)
+			out, err := fh.Invoke(args)
+			if err != nil {
+				return err
+			}
+			return out
 		case db.Native.ID:
 			fh := &datatypes.GoFunctionHandle{Function: db.CodeMap[rec.ID()].Function}
-			return fh.Invoke(args)
+			out, err := fh.Invoke(args)
+			if err != nil {
+				return err
+			}
+			return out
 		default:
-			return nil, fmt.Errorf("Can't execute code because it uses an unsupported runtime")
+			return fmt.Errorf("Can't execute code because it uses an unsupported runtime")
 		}
 	}
 	return env

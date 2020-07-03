@@ -62,6 +62,24 @@ func (m *Module) ProvideRecords() ([]db.Record, error) {
 		return records, err
 	}
 	records = append(records, r3)
+
+	r4 := db.RecordForModel(db.CodeModel)
+	db.SaveCode(r4, validateManyRPC)
+	records = append(records, r4)
+	r5 := db.RecordForModel(RPCModel)
+	err = r5.Set("name", "validate")
+	if err != nil {
+		return records, err
+	}
+	err = r5.Set("id", uuid.MustParse("865fbf7d-ce33-4e4c-bb7d-b4b5e1c82dca"))
+	if err != nil {
+		return records, err
+	}
+	err = r5.SetFK("code", r4.ID())
+	if err != nil {
+		return records, err
+	}
+	records = append(records, r5)
 	return records, nil
 }
 

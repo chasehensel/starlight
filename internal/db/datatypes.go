@@ -18,6 +18,7 @@ var datatypeMap map[ID]Datatype = map[ID]Datatype{
 	Bool.GetID():              Bool,
 	Int.GetID():               Int,
 	String.GetID():            String,
+	LongText.GetID():          LongText,
 	UUID.GetID():              UUID,
 	Float.GetID():             Float,
 	Runtime.GetID():           Runtime,

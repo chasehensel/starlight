@@ -252,6 +252,15 @@ var stringValidator = Code{
 	FunctionSignature: FromJSON,
 }
 
+var textValidator = Code{
+	Name:              "longText",
+	ID:                MakeID("eb78bcc8-d933-46cb-808f-216a7042f7d0"),
+	Runtime:           Native,
+	Function:          datatypes.StringFromJSON,
+	executor:          &bootstrapCodeExecutor{},
+	FunctionSignature: FromJSON,
+}
+
 var uuidValidator = Code{
 	Name:              "uuid",
 	ID:                MakeID("60dfeee2-105f-428d-8c10-c4cc3557a40a"),
@@ -288,6 +297,13 @@ var String = coreDatatype{
 	ID:        MakeID("cbab8b98-7ec3-4237-b3e1-eb8bf1112c12"),
 	Name:      "string",
 	Validator: stringValidator,
+	StoredAs:  StringStorage,
+}
+
+var LongText = coreDatatype{
+	ID:        MakeID("1557f632-63b8-4a4a-86db-4ff7dc6f4457"),
+	Name:      "longText",
+	Validator: textValidator,
 	StoredAs:  StringStorage,
 }
 

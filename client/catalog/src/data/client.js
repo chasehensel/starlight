@@ -1,53 +1,51 @@
 const basePath = "https://localhost:8080/";
 const methods = ["create", "findOne", "findMany", "update", "updateMany"];
 
+async function call(path, params) {
+  const res = await fetch(basePath + path, {
+    method: "POST",
+    body: JSON.stringify(params)
+  });
+  const responseBody = await res.json();
+  if ("code" in responseBody) {
+    return Promise.reject(responseBody);
+  }
+  return responseBody.data;
+}
+
 var client = {
-  api : new Proxy({}, {
-    get: function(target, resource) {
-        var out = {};
-        methods.forEach((method) => {
-          out[method] = async (params) => {
-          const res = await fetch(basePath + "api/" + resource + "." + method, {
-            method: "POST",
-            body: JSON.stringify(params),
-          });
-          const responseBody = await res.json();
-          return responseBody.data;
-        }
-      });
-      return out;
-    }
-  }),
-  views: {
-    rpc : new Proxy({}, {
+  api: new Proxy(
+    {},
+    {
       get: function(target, resource) {
-        return async (params) => {
-          const res = await fetch(basePath + "views/rpc/" + resource, {
-            method: "POST",
-            body: JSON.stringify(params),
-          });
-          const responseBody = await res.json();
-          return responseBody.data;
+        var out = {};
+        methods.forEach(method => {
+          out[method] = params => {
+            return call("api/" + resource + "." + method, params);
+          };
+        });
+        return out;
+      }
+    }
+  ),
+  views: {
+    rpc: new Proxy(
+      {},
+      {
+        get: function(target, resource) {
+          return params => {
+            return call("views/rpc/" + resource, params);
+          };
         }
       }
-    }),
-    repl : async (params) => {
-	    const res = await fetch(basePath + "views/repl", {
-	      method: "POST",
-	      body: JSON.stringify(params)
-	    });
-	    const responseBody = await res.json();
-	    return responseBody;
+    ),
+    repl: params => {
+      return call("views/repl", params);
     }
   },
-  log : async (params) => {
-	  const res = await fetch(basePath + "log.scan", {
-	    method: "POST",
-	    body: JSON.stringify(params)
-	  });
-	  const responseBody = await res.json();
-	  return responseBody.data;
+  log: params => {
+    return call("log.scan", params);
   }
 };
 
-module.exports = client;
+export default client;

@@ -10,11 +10,11 @@ import (
 )
 
 type REPLRequest struct {
-	Input string `json:"input"`
+	Data string `json:"data"`
 }
 
 type REPLResponse struct {
-	Output interface{} `json:"output"`
+	Data interface{} `json:"data"`
 }
 
 type REPLHandler struct {
@@ -33,11 +33,10 @@ func (rh REPLHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) (err err
 	rh.bus.Publish(lib.ParseRequest{Request: rr})
 
 	rwtx := rh.db.NewRWTx()
-	replOut := eval(rr.Input, rwtx)
-
+	replOut := eval(rr.Data, rwtx)
 	rwtx.Commit()
 
-	response := REPLResponse{Output: replOut}
+	response := REPLResponse{Data: replOut}
 	// write out the response
 	bytes, _ := jsoniter.Marshal(&response)
 	_, _ = w.Write(bytes)

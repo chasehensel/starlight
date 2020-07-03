@@ -29,6 +29,7 @@ var CodeMap map[ID]Code = map[ID]Code{
 	boolValidator.ID:   boolValidator,
 	intValidator.ID:    intValidator,
 	stringValidator.ID: stringValidator,
+	textValidator.ID:   textValidator,
 	uuidValidator.ID:   uuidValidator,
 	floatValidator.ID:  floatValidator,
 }
