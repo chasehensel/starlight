@@ -293,19 +293,19 @@ func loadModel(tx *holdTx, storeModel Record) (Model, error) {
 		var d Datatype
 		if enum == true {
 			var e Enum
-			d, err = e.RecordToStruct(storeDatatype, tx)
+			d, err = e.RecordToDatatype(storeDatatype, tx)
 			if err != nil {
 				return Model{}, err
 			}
 		} else if native == true {
 			var c coreDatatype
-			d, err = c.RecordToStruct(storeDatatype, tx)
+			d, err = c.RecordToDatatype(storeDatatype, tx)
 			if err != nil {
 				return Model{}, err
 			}
 		} else {
 			var c DatatypeStorage
-			d, err = c.RecordToStruct(storeDatatype, tx)
+			d, err = c.RecordToDatatype(storeDatatype, tx)
 			if err != nil {
 				return Model{}, err
 			}

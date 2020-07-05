@@ -6,7 +6,7 @@ import (
 
 var EmailAddressValidator = db.Code{
 	ID:                db.MakeID("ed046b08-ade2-4570-ade4-dd1e31078219"),
-	Name:              "emailAddressValidator",
+	Name:              "emailAddress",
 	Runtime:           db.Starlark,
 	FunctionSignature: db.FromJSON,
 	Code: `# Compile Regular Expression for email addresses
@@ -22,7 +22,7 @@ def validator(input):
 
 var URLValidator = db.Code{
 	ID:                db.MakeID("259d9049-b21e-44a4-abc5-79b0420cda5f"),
-	Name:              "urlValidator",
+	Name:              "url",
 	Runtime:           db.Starlark,
 	FunctionSignature: db.FromJSON,
 	Code: `def validator(input):

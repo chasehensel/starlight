@@ -11,7 +11,7 @@ type Datatype interface {
 	GetID() ID
 	Storage() StorageEnumValue
 	FillRecord(Record) error
-	RecordToStruct(Record, Tx) (Datatype, error)
+	RecordToDatatype(Record, Tx) (Datatype, error)
 }
 
 var datatypeMap map[ID]Datatype = map[ID]Datatype{
@@ -86,7 +86,7 @@ func (d coreDatatype) FillRecord(storeDatatype Record) error {
 	return ew.err
 }
 
-func (d coreDatatype) RecordToStruct(r Record, tx Tx) (Datatype, error) {
+func (d coreDatatype) RecordToDatatype(r Record, tx Tx) (Datatype, error) {
 	vk, err := r.GetFK("validator")
 	if err != nil {
 		return nil, err
@@ -152,7 +152,7 @@ func (d DatatypeStorage) FillRecord(storeDatatype Record) error {
 	return ew.err
 }
 
-func (d DatatypeStorage) RecordToStruct(r Record, tx Tx) (Datatype, error) {
+func (d DatatypeStorage) RecordToDatatype(r Record, tx Tx) (Datatype, error) {
 	vk, err := r.GetFK("validator")
 	if err != nil {
 		return nil, err
@@ -213,7 +213,7 @@ func (d Enum) FillRecord(storeDatatype Record) error {
 	return ew.err
 }
 
-func (d Enum) RecordToStruct(r Record, tx Tx) (Datatype, error) {
+func (d Enum) RecordToDatatype(r Record, tx Tx) (Datatype, error) {
 	ew := NewRecordWriter(r)
 	d = Enum{
 		ID:   r.ID(),
