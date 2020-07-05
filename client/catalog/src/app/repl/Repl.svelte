@@ -43,7 +43,6 @@ function setUpCM() {
 
 async function runRepl() {
 	const result = await client.rpc.repl({data: {data : cm.getValue().trim()}});
-	;
 	if(repl.getValue() == "") {
 		if (result == "") {
 			repl.setValue(">>> " + cm.getValue().trim());

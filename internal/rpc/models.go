@@ -150,3 +150,17 @@ var replRPC = db.Code{
 
 result(repl(args))`,
 }
+
+
+var parseRPC = db.Code{
+	ID:                db.MakeID("232d7ad5-357b-43fb-a707-a0a6ba190e7c"),
+	Name:              "parse",
+	Runtime:           db.Starlark,
+	FunctionSignature: db.RPC,
+	Code: `def parse(args):
+    msg, parsed = Parse(args["data"])
+    return {"error" : msg, "parsed" : parsed}
+
+result(parse(args))`,
+}
+

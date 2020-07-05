@@ -46,11 +46,12 @@ func (m *Module) ProvideRecords() ([]db.Record, error) {
 	}
 	records = append(records, r)
 
-	rpcs := []db.Code{reactFormRPC, validateRPC, replRPC}
+	rpcs := []db.Code{reactFormRPC, validateRPC, replRPC, parseRPC}
 	ids := []uuid.UUID{
 		uuid.MustParse("112197db-d9d6-46b7-9c9b-be4980562d95"),
 		uuid.MustParse("865fbf7d-ce33-4e4c-bb7d-b4b5e1c82dca"),
-		uuid.MustParse("f0626fc2-c6f9-4a93-be40-33a7fefaa548")}
+		uuid.MustParse("f0626fc2-c6f9-4a93-be40-33a7fefaa548"),
+		uuid.MustParse("34e086ea-b755-48e0-9a97-3073b2ca66ca")}
 	for i, code := range rpcs {
 		r1 := db.RecordForModel(db.CodeModel)
 		db.SaveCode(r1, code)

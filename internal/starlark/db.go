@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"go.starlark.net/starlark"
+	"go.starlark.net/syntax"
 	"reflect"
 )
 
@@ -355,6 +356,16 @@ func DBLib(tx db.RWTx) map[string]interface{} {
 			return nil, err
 		}
 		return rec, err
+	}
+	env["Parse"] = func(code interface{}) (string, bool, error) {
+		if input, ok := code.(string); ok {
+			_, err := syntax.Parse("", input, 0)
+			if err != nil {
+				return fmt.Sprintf("%s", err), false, nil
+			}
+			return "", true, nil
+		}
+		return "", false, fmt.Errorf("%w code was type %T", ErrInvalidInput, code)
 	}
 	env["Exec"] = func(code interface{}, args interface{}) (string, bool, error) {
 		if rec, ok := code.(*starlarkRecord); ok {
