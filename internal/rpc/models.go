@@ -128,9 +128,9 @@ var validateRPC = db.Code{
         inp = ""
         if name in data:
             inp = str(data[name])
-        out = str(Exec(y, inp))
+        out, ran = Exec(y, inp)
         #If there is an error from a validator
-        if out != inp:
+        if ran == False:
             errors[name] = {"__errors" : [out]}
     return errors
         
@@ -142,6 +142,11 @@ var replRPC = db.Code{
 	Name:              "repl",
 	Runtime:           db.Starlark,
 	FunctionSignature: db.RPC,
-	Code: `out = Exec(args["data"], "").strip(":")
-result("Starlark: " + out)`,
+	Code: `def repl(args):
+    out, ran = Exec(args["data"], "")
+    if ran == False:
+        return "Starlark: " + out.strip(":")
+    return out
+
+result(repl(args))`,
 }

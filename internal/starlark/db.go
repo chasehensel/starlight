@@ -356,32 +356,32 @@ func DBLib(tx db.RWTx) map[string]interface{} {
 		}
 		return rec, err
 	}
-	env["Exec"] = func(code interface{}, args interface{}) (string, error) {
+	env["Exec"] = func(code interface{}, args interface{}) (string, bool, error) {
 		if rec, ok := code.(*starlarkRecord); ok {
 			c, err := db.RecordToCode(rec.inner, tx)
 			if err != nil {
-				return "", err
+				return "", false, err
 			}
 			r, err := c.Executor.Invoke(c, args)
 			if err != nil {
-				return fmt.Sprintf("%s", err), nil
+				return fmt.Sprintf("%s", err), false, nil
 			}
 			if r == nil {
-				return "", nil
+				return "", true, nil
 			}
-			return fmt.Sprintf("%v", r), nil
+			return fmt.Sprintf("%v", r), true, nil
 		} else if input, ok := code.(string); ok {
 			sh := StarlarkFunctionHandle{Code: input, Env: DBLib(tx)}
 			r, err := sh.Invoke(args)
 			if err != nil {
-				return fmt.Sprintf("%s", err), nil
+				return fmt.Sprintf("%s", err), false, nil
 			}
 			if r == nil {
-				return "", nil
+				return "", true, nil
 			}
-			return fmt.Sprintf("%v", r), nil
+			return fmt.Sprintf("%v", r), true, nil
 		}
-		return "", fmt.Errorf("%w code was type %T", ErrInvalidInput, code)
+		return "", false, fmt.Errorf("%w code was type %T", ErrInvalidInput, code)
 	}
 	return env
 }
