@@ -1,3 +1,5 @@
+import { isObject } from "../app/util.js";
+
 const basePath = "https://localhost:8080/";
 const methods = ["create", "findOne", "findMany", "update", "updateMany"];
 
@@ -28,21 +30,16 @@ var client = {
       }
     }
   ),
-  views: {
-    rpc: new Proxy(
-      {},
-      {
-        get: function(target, resource) {
-          return params => {
-            return call("views/rpc/" + resource, params);
-          };
-        }
-      }
-    ),
-    repl: params => {
-      return call("views/repl", params);
+  rpc: new Proxy(
+    {},
+    {
+      get: function(target, resource) {
+  	    return params => {
+  		  return call("views/rpc/" + resource, params);
+ 	    };
+ 	  }
     }
-  },
+  ),
   log: params => {
     return call("log.scan", params);
   }

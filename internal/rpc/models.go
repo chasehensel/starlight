@@ -110,7 +110,7 @@ result({"schema" : {
        "uiSchema" : out["uiSchema"]})`,
 }
 
-var validateManyRPC = db.Code{
+var validateRPC = db.Code{
 	ID:                db.MakeID("d7633de5-9fa2-4409-a1b2-db96a59be52b"),
 	Name:              "validate",
 	Runtime:           db.Starlark,
@@ -132,4 +132,13 @@ var validateManyRPC = db.Code{
     return errors
         
 result(validateMany(args))`,
+}
+
+var replRPC = db.Code{
+	ID:                db.MakeID("591bc8f7-543b-4fa9-bdf7-8948c79cdd26"),
+	Name:              "repl",
+	Runtime:           db.Starlark,
+	FunctionSignature: db.RPC,
+	Code: `out = Exec(args["data"], "").strip(":")
+result("Starlark: " + out)`,
 }

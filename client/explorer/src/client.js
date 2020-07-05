@@ -1,8 +1,8 @@
 const basePath = "https://e329e49c8232.ngrok.io/";
 const methods = ["create", "findOne", "findMany", "update", "updateMany"];
 
-async function call(uri, params) {
-  const res = await fetch(uri, {
+async function call(path, params) {
+  const res = await fetch(basePath + path, {
     method: "POST",
     body: JSON.stringify(params)
   });
@@ -21,30 +21,25 @@ var client = {
         var out = {};
         methods.forEach(method => {
           out[method] = params => {
-            return call(basePath + "api/" + resource + "." + method, params);
+            return call("api/" + resource + "." + method, params);
           };
         });
         return out;
       }
     }
   ),
-  views: {
-    rpc: new Proxy(
-      {},
-      {
-        get: function(target, resource) {
-          return params => {
-            return call(basePath + "views/rpc/" + resource, params);
-          };
-        }
-      }
-    ),
-    repl: params => {
-      return call(basePath + "views/repl", params);
+  rpc: new Proxy(
+    {},
+    {
+      get: function(target, resource) {
+  	    return params => {
+  		  return call("views/rpc/" + resource, params);
+ 	    };
+ 	  }
     }
-  },
+  ),
   log: params => {
-    return call(basePath + "log.scan", params);
+    return call("log.scan", params);
   }
 };
 

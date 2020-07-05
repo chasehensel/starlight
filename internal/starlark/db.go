@@ -1,7 +1,6 @@
 package starlark
 
 import (
-	"awans.org/aft/internal/datatypes"
 	"awans.org/aft/internal/db"
 	"fmt"
 	"github.com/google/uuid"
@@ -199,7 +198,6 @@ func (r *starlarkRecord) GetFloat(fieldName string) (float64, error) {
 	return field.(float64), nil
 }
 
-
 func (r *starlarkRecord) GetFK(fieldName string) (db.ID, error) {
 	rel, err := r.inner.GetFK(fieldName)
 	if err != nil {
@@ -358,37 +356,32 @@ func DBLib(tx db.RWTx) map[string]interface{} {
 		}
 		return rec, err
 	}
-	env["Exec"] = func(r interface{}, args interface{}) interface{} {
-		ew := errWriter{}
-		rec := ew.assertStarlarkRecord(r)
-		ci := ew.GetFromRecord("code", rec)
-		code := ew.assertString(ci)
-		runtime, err := db.RecordToEnumValue(rec.inner, "runtime", tx)
-		if err != nil {
-			return err
-		}
-		fs, err := db.RecordToEnumValue(rec.inner, "functionSignature", tx)
-		if err != nil {
-			return ew.err
-		}
-		switch runtime.ID {
-		case db.Starlark.ID:
-			fh := &StarlarkFunctionHandle{Code: code, FunctionSignature: db.FunctionSignatureEnumValue{fs}}
-			out, err := fh.Invoke(args)
+	env["Exec"] = func(code interface{}, args interface{}) (string, error) {
+		if rec, ok := code.(*starlarkRecord); ok {
+			c, err := db.RecordToCode(rec.inner, tx)
 			if err != nil {
-				return err
+				return "", err
 			}
-			return out
-		case db.Native.ID:
-			fh := &datatypes.GoFunctionHandle{Function: db.CodeMap[rec.ID()].Function}
-			out, err := fh.Invoke(args)
+			r, err := c.Executor.Invoke(c, args)
 			if err != nil {
-				return err
+				return fmt.Sprintf("%s", err), nil
 			}
-			return out
-		default:
-			return fmt.Errorf("Can't execute code because it uses an unsupported runtime")
+			if r == nil {
+				return "", nil
+			}
+			return fmt.Sprintf("%v", r), nil
+		} else if input, ok := code.(string); ok {
+			sh := StarlarkFunctionHandle{Code: input, Env: DBLib(tx)}
+			r, err := sh.Invoke(args)
+			if err != nil {
+				return fmt.Sprintf("%s", err), nil
+			}
+			if r == nil {
+				return "", nil
+			}
+			return fmt.Sprintf("%v", r), nil
 		}
+		return "", fmt.Errorf("%w code was type %T", ErrInvalidInput, code)
 	}
 	return env
 }
