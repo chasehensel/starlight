@@ -115,13 +115,16 @@ var validateRPC = db.Code{
 	Name:              "validate",
 	Runtime:           db.Starlark,
 	FunctionSignature: db.RPC,
-	Code: `def validateMany(args):
+	Code: `def validate(args):
     properties = args["schema"]["properties"]
     data = args["data"]
     errors = {}
     for name in properties:
         x = FindOne("datatype", Eq("name", properties[name]["datatype"]))
-        y = FindOne("code", EqID(x.GetFK("validator")))
+        if x.GetBool("enum") == False:
+            y = FindOne("code", EqID(x.GetFK("validator")))
+        else:
+            y = FindOne("code", Eq("name", "uuid"))
         inp = ""
         if name in data:
             inp = str(data[name])
@@ -131,7 +134,7 @@ var validateRPC = db.Code{
             errors[name] = {"__errors" : [out]}
     return errors
         
-result(validateMany(args))`,
+result(validate(args))`,
 }
 
 var replRPC = db.Code{

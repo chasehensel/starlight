@@ -169,7 +169,6 @@ func recursiveToValue(input interface{}) (out starlark.Value, err error) {
 	}
 
 	switch input.(type) {
-	//Do I need other map types?
 	case map[string]interface{}:
 		dict := starlark.Dict{}
 		for k, v := range input.(map[string]interface{}) {
@@ -185,14 +184,14 @@ func recursiveToValue(input interface{}) (out starlark.Value, err error) {
 		}
 		return &dict, nil
 	case []interface{}:
-		l := input.([]interface{})
-		out := make([]starlark.Value, 0, len(l))
-		for i := 0; i < len(l); i++ {
-			val, err := recursiveToValue(out[i])
+		list := input.([]interface{})
+		out := make([]starlark.Value, 0, len(list))
+		for i := 0; i < len(list); i++ {
+			val, err := recursiveToValue(list[i])
 			if err != nil {
 				return nil, err
 			}
-			out[i] = val
+			out = append(out, val)
 		}
 		return starlark.NewList(out), nil
 	default:

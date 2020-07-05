@@ -33,7 +33,7 @@ var client = {
     {
       get: function(target, resource) {
   	    return params => {
-  		  return call("views/rpc/" + resource, params);
+  		  return call("rpc/" + resource, params);
  	    };
  	  }
     }
