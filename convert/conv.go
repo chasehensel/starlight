@@ -19,7 +19,14 @@ func ToValue(v interface{}) (starlark.Value, error) {
 	return toValue(reflect.ValueOf(v))
 }
 
+func IsZeroOfUnderlyingType(x interface{}) bool {
+    return reflect.DeepEqual(x, reflect.Zero(reflect.TypeOf(x)).Interface())
+}
+
 func hasMethods(val reflect.Value) bool {
+	if(IsZeroOfUnderlyingType(val)) {
+		return false
+	}
 	if val.NumMethod() > 0 {
 		return true
 	}
