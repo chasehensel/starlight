@@ -24,9 +24,6 @@ func IsZeroOfUnderlyingType(x interface{}) bool {
 }
 
 func hasMethods(val reflect.Value) bool {
-	if(IsZeroOfUnderlyingType(val)) {
-		return false
-	}
 	if val.NumMethod() > 0 {
 		return true
 	}
@@ -73,6 +70,9 @@ func toValue(val reflect.Value) (starlark.Value, error) {
 	case reflect.Struct:
 		return &GoStruct{v: val}, nil
 	case reflect.Interface:
+		if(IsZeroOfUnderlyingType(val.Elem())) {
+			return &GoInterface{v :val}, nil
+		}
 		return toValue(val.Elem())
 	}
 	return nil, fmt.Errorf("type %T is not a supported starlark type", val.Interface())
