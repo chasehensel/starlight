@@ -66,9 +66,9 @@ func toValue(val reflect.Value) (starlark.Value, error) {
 	case reflect.Struct:
 		return &GoStruct{v: val}, nil
 	case reflect.Interface:
+		fmt.Println("HERE")
 		return toValue(val.Elem())
 	}
-	fmt.Printf("%T", val)
 	return nil, fmt.Errorf("type %T is not a supported starlark type", val.Interface())
 }
 
