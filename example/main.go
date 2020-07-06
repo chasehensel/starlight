@@ -5,7 +5,7 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/starlight-go/starlight"
+	"github.com/chasehensel/starlight"
 )
 
 func main() {

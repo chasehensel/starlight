@@ -5,9 +5,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/starlight-go/starlight/convert"
-
-	"github.com/starlight-go/starlight"
+	"github.com/chasehensel/starlight/convert"
+	"github.com/chasehensel/starlight"
 	"go.starlark.net/starlark"
 )
 

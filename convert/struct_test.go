@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/starlight-go/starlight"
+	"github.com/chasehensel/starlight"
 )
 
 type mega struct {

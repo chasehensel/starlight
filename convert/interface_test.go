@@ -8,7 +8,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/starlight-go/starlight"
+	"github.com/chasehensel/starlight"
 )
 
 func TestInterfaceStructPtr(t *testing.T) {
