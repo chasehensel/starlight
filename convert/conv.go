@@ -5,17 +5,8 @@ import (
 	"fmt"
 	"reflect"
 
-	"go.starlark.net/resolve"
 	"go.starlark.net/starlark"
 )
-
-func init() {
-	resolve.AllowNestedDef = true // allow def statements within function bodies
-	resolve.AllowLambda = true    // allow lambda expressions
-	resolve.AllowFloat = true     // allow floating point literals, the 'float' built-in, and x / y
-	resolve.AllowSet = true       // allow the 'set' built-in
-	resolve.AllowBitwise = true   // allow bitwise operands
-}
 
 // ToValue attempts to convert the given value to a starlark.Value.  It supports
 // all int, uint, and float numeric types, plus strings and bools.  It supports
@@ -64,17 +55,20 @@ func toValue(val reflect.Value) (starlark.Value, error) {
 	case reflect.Func:
 		return makeStarFn("fn", val), nil
 	case reflect.Map:
-		return &GoMap{v: val}, nil
+		return makeDict(val)
 	case reflect.String:
 		return starlark.String(val.String()), nil
-	case reflect.Slice, reflect.Array:
+	case reflect.Array, reflect.Slice:
+		if l, ok := val.Interface().([]interface{}); ok {
+			return MakeList(l)
+		}
 		return &GoSlice{v: val}, nil
 	case reflect.Struct:
 		return &GoStruct{v: val}, nil
 	case reflect.Interface:
-		return &GoInterface{v: val}, nil
+		return toValue(val.Elem())
 	}
-
+	fmt.Printf("%T", val)
 	return nil, fmt.Errorf("type %T is not a supported starlark type", val.Interface())
 }
 
@@ -154,6 +148,20 @@ func FromTuple(v starlark.Tuple) []interface{} {
 	return ret
 }
 
+// MakeList makes a List from the given map.  The acceptable keys and values are
+// the same as ToValue.
+func MakeList(list []interface{}) (starlark.Value, error) {
+	out := make([]starlark.Value, 0, len(list))
+	for i := 0; i < len(list); i++ {
+		val, err := ToValue(list[i])
+		if err != nil {
+			return nil, err
+		}
+		out = append(out, val)
+	}
+	return starlark.NewList(out), nil
+}
+
 // FromList creates a go slice from the given starlark list.
 func FromList(l *starlark.List) []interface{} {
 	ret := make([]interface{}, 0, l.Len())
@@ -179,30 +187,28 @@ func makeDict(val reflect.Value) (starlark.Value, error) {
 	}
 	dict := starlark.Dict{}
 	for _, k := range val.MapKeys() {
-		key, err := toValue(k)
+		key, err := ToValue(k.Interface())
 		if err != nil {
 			return nil, err
 		}
-
-		val, err := toValue(val.MapIndex(k))
+		v, err := ToValue(val.MapIndex(k).Interface())
 		if err != nil {
 			return nil, err
 		}
-		dict.SetKey(key, val)
+		dict.SetKey(key, v)
 	}
 	return &dict, nil
 }
 
 // FromDict converts a starlark.Dict to a map[interface{}]interface{}
 func FromDict(m *starlark.Dict) map[interface{}]interface{} {
-	ret := make(map[interface{}]interface{}, m.Len())
+	out := make(map[interface{}]interface{})
 	for _, k := range m.Keys() {
 		key := FromValue(k)
-		// should never be not found or unhashable, so ignore err and found.
 		val, _, _ := m.Get(k)
-		ret[key] = val
+		out[key] = FromValue(val)
 	}
-	return ret
+	return out
 }
 
 // MakeSet makes a Set from the given map.  The acceptable keys
@@ -290,6 +296,7 @@ func makeStarFn(name string, gofn reflect.Value) *starlark.Builtin {
 		for i, v := range vals {
 			val := reflect.ValueOf(v)
 			argT := gofn.Type().In(i)
+
 			if !val.Type().AssignableTo(argT) {
 				val = val.Convert(argT)
 			}
@@ -312,6 +319,7 @@ func makeOut(out []reflect.Value) (starlark.Value, error) {
 		}
 		out = out[:len(out)-1]
 	}
+
 	if len(out) == 1 {
 		v, err2 := toValue(out[0])
 		if err2 != nil {
