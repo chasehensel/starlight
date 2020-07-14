@@ -129,7 +129,7 @@ func (g *GoStruct) Hash() (uint32, error) {
 }
 
 //blah testing
-func GetUnexportedField(field reflect.Value) interface{} {
+func GetUnexportedField(field reflect.Value) reflect.Value {
     return reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem().Interface()
 }
 
