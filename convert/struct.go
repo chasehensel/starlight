@@ -4,7 +4,8 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-
+	"unsafe"
+	
 	"go.starlark.net/starlark"
 )
 
@@ -42,6 +43,8 @@ func (g *GoStruct) Attr(name string) (starlark.Value, error) {
 	field := v.FieldByName(name)
 	if field.Kind() != reflect.Invalid {
 		return toValue(field)
+	} else { //incase it's unexported
+		return toValue(GetUnexportedField(field))
 	}
 	return nil, nil
 }
@@ -86,6 +89,10 @@ func (g *GoStruct) SetField(name string, val starlark.Value) error {
 		val := conv(val, field.Type())
 		field.Set(val)
 		return nil
+	} else {
+		val := conv(val, field.Type())
+		SetUnexportedField(field, val)
+		return nil
 	}
 	return fmt.Errorf("%s is not a settable field", name)
 }
@@ -119,4 +126,15 @@ func (g *GoStruct) Truth() starlark.Bool {
 // contains a non-hashable value.
 func (g *GoStruct) Hash() (uint32, error) {
 	return 0, errors.New("starlight_struct is not hashable")
+}
+
+//blah testing
+func GetUnexportedField(field reflect.Value) interface{} {
+    return reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).Elem().Interface()
+}
+
+func SetUnexportedField(field reflect.Value, value interface{}) {
+    reflect.NewAt(field.Type(), unsafe.Pointer(field.UnsafeAddr())).
+        Elem().
+        Set(reflect.ValueOf(value))
 }
